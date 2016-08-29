@@ -6,6 +6,11 @@
 rm(list = ls())
 load('~/Classes/rcpp/rcpp.RData')
 
+#install.packages('inline')
+#install.packages('Rcpp')
+library(inline)
+library(Rcpp)
+
 # 1. A Gentle Introduction to Rcpp
 
 # 1.1 Background: From R to C++
@@ -32,7 +37,30 @@ lines(fit)
     return (fibR(n - 2) + fibR(n - 1))
   }
 
+
   # 1.2.3 A First C++ Solution 
   # See ./introToRcpp.cpp  
+
+
+  # 1.2.4 Using Inline
+  # Raw C/++ code:
+  incltxt <- '
+    int fibonacci(const int x) {
+      if (x == 0) { return 0; }
+      if (x == 1) { return 1; }
+      return fibonacci(x - 2) + fibonacci(x - 1);
+    }
+  '
+  
+  fibRcpp <- cxxfunction(
+    signature(xs = 'int'), 
+    plugin = 'Rcpp', 
+    incl = incltxt, 
+    body = 'int x = Rcpp::as<int>(xs);
+            return Rcpp::wrap(fibonacci(x));')
+            
+  # Compare speeds
+  fibR(30)            
+  fibRcpp(30)   
 
 save.image('~/Classes/rcpp/rcpp.RData')
